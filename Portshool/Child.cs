@@ -3,12 +3,15 @@ using Portshool.HelpConnect;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
 
 namespace Portshool
 {
     public partial class Child : Form
     {
+        private Button printButton;
 
         public Child()
         {
@@ -227,6 +230,81 @@ namespace Portshool
             }
         }
 
+        private void PrintReport_Click(object sender, EventArgs e)
+        {
+            DataTable grades = GradeDataW.DataSource as DataTable;
+            DataTable achievements = AchivmentData.DataSource as DataTable;
+
+            List<string> infoLines = new List<string>
+            {
+                Surname_L.Text,
+                name_L.Text,
+                Ochag_L.Text,
+                birthday_l.Text,
+                Adress_l.Text,
+                Class_L.Text
+            };
+
+            string studentName = StripLabelPrefix(Surname_L.Text) + " " +
+                                 StripLabelPrefix(name_L.Text) + " " +
+                                 StripLabelPrefix(Ochag_L.Text);
+            studentName = studentName.Trim();
+
+            using (SaveFileDialog dialog = new SaveFileDialog())
+            {
+                dialog.Filter = "Документ Word (*.docx)|*.docx";
+                dialog.Title = "Сохранить отчёт портфолио";
+                dialog.FileName = BuildFileName(studentName);
+
+                if (dialog.ShowDialog() != DialogResult.OK)
+                {
+                    return;
+                }
+
+                try
+                {
+                    string title = string.IsNullOrWhiteSpace(studentName)
+                        ? "Портфолио ученика"
+                        : "Портфолио ученика — " + studentName;
+
+                    WordReportHelper.SaveStudentReport(dialog.FileName, title, infoLines, grades, achievements);
+
+                    DialogResult open = MessageBox.Show(
+                        "Отчёт сохранён:\n" + dialog.FileName + "\n\nОткрыть файл сейчас?",
+                        "Готово",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information);
+
+                    if (open == DialogResult.Yes)
+                    {
+                        Process.Start(new ProcessStartInfo(dialog.FileName) { UseShellExecute = true });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Не удалось сохранить отчёт");
+                }
+            }
+        }
+
+        private static string StripLabelPrefix(string labelText)
+        {
+            int separator = labelText.IndexOf(':');
+            return separator >= 0 ? labelText.Substring(separator + 1).Trim() : labelText.Trim();
+        }
+
+        private static string BuildFileName(string studentName)
+        {
+            string baseName = string.IsNullOrWhiteSpace(studentName) ? "Портфолио" : "Портфолио_" + studentName;
+
+            foreach (char invalid in Path.GetInvalidFileNameChars())
+            {
+                baseName = baseName.Replace(invalid, '_');
+            }
+
+            return baseName.Replace(' ', '_') + ".docx";
+        }
+
         private void PrepareInterface()
         {
             UiTheme.ApplyForm(this);
@@ -245,6 +323,15 @@ namespace Portshool
             Exit.Size = new System.Drawing.Size(108, 34);
             Exit.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             UiTheme.StyleSecondaryButton(Exit);
+
+            printButton = new Button();
+            printButton.Text = "Печать отчёта (Word)";
+            printButton.Location = new System.Drawing.Point(ClientSize.Width - 352, 24);
+            printButton.Size = new System.Drawing.Size(208, 34);
+            printButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            printButton.Click += new EventHandler(PrintReport_Click);
+            UiTheme.StylePrimaryButton(printButton);
+            Controls.Add(printButton);
 
             Surname_L.Location = new System.Drawing.Point(174, 78);
             name_L.Location = new System.Drawing.Point(174, 124);

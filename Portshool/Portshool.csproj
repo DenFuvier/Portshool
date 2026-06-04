@@ -114,9 +114,11 @@
       <DependentUpon>Child.cs</DependentUpon>
     </Compile>
     <Compile Include="HelpConnect\SqlConnect.cs" />
+    <Compile Include="PortfolioFileHelper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HelpConnect\Session.cs" />
+    <Compile Include="UiTheme.cs" />
     <Compile Include="Teacher.cs">
       <SubType>Form</SubType>
     </Compile>

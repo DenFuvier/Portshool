@@ -33,7 +33,9 @@
             this.Ochag_L = new System.Windows.Forms.Label();
             this.name_L = new System.Windows.Forms.Label();
             this.Exit = new System.Windows.Forms.Button();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.ViewsChildren)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // ViewsChildren
@@ -49,7 +51,7 @@
             // 
             this.Surname_L.AutoSize = true;
             this.Surname_L.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.Surname_L.Location = new System.Drawing.Point(12, 50);
+            this.Surname_L.Location = new System.Drawing.Point(138, 9);
             this.Surname_L.Name = "Surname_L";
             this.Surname_L.Size = new System.Drawing.Size(101, 24);
             this.Surname_L.TabIndex = 2;
@@ -59,7 +61,7 @@
             // 
             this.Ochag_L.AutoSize = true;
             this.Ochag_L.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.Ochag_L.Location = new System.Drawing.Point(12, 95);
+            this.Ochag_L.Location = new System.Drawing.Point(138, 96);
             this.Ochag_L.Name = "Ochag_L";
             this.Ochag_L.Size = new System.Drawing.Size(98, 24);
             this.Ochag_L.TabIndex = 3;
@@ -69,7 +71,7 @@
             // 
             this.name_L.AutoSize = true;
             this.name_L.Font = new System.Drawing.Font("Times New Roman", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.name_L.Location = new System.Drawing.Point(12, 8);
+            this.name_L.Location = new System.Drawing.Point(138, 51);
             this.name_L.Name = "name_L";
             this.name_L.Size = new System.Drawing.Size(51, 24);
             this.name_L.TabIndex = 4;
@@ -84,11 +86,20 @@
             this.Exit.Text = "Деаутефикация";
             this.Exit.UseVisualStyleBackColor = true;
             // 
+            // pictureBox1
+            // 
+            this.pictureBox1.Location = new System.Drawing.Point(12, 8);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(100, 110);
+            this.pictureBox1.TabIndex = 10;
+            this.pictureBox1.TabStop = false;
+            // 
             // Teacher
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 731);
+            this.Controls.Add(this.pictureBox1);
             this.Controls.Add(this.Exit);
             this.Controls.Add(this.ViewsChildren);
             this.Controls.Add(this.Surname_L);
@@ -99,6 +110,7 @@
             this.Text = "Учитель";
             this.Load += new System.EventHandler(this.Teacher_Load);
             ((System.ComponentModel.ISupportInitialize)(this.ViewsChildren)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -111,5 +123,6 @@
         private System.Windows.Forms.Label Ochag_L;
         private System.Windows.Forms.Label name_L;
         private System.Windows.Forms.Button Exit;
+        private System.Windows.Forms.PictureBox pictureBox1;
     }
 }

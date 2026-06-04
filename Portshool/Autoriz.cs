@@ -1,5 +1,4 @@
 ﻿using MySql.Data.MySqlClient;
-using MySqlX.XDevAPI;
 using Portshool.HelpConnect;
 using System;
 using System.Windows.Forms;
@@ -13,6 +12,47 @@ namespace Portshool
         public Autoriz()
         {
             InitializeComponent();
+
+            if (!UiTheme.IsDesignMode)
+            {
+                PrepareInterface();
+            }
+        }
+
+        private void PrepareInterface()
+        {
+            UiTheme.ApplyForm(this);
+            MinimumSize = new System.Drawing.Size(420, 300);
+            ClientSize = new System.Drawing.Size(420, 300);
+            Text = "Электронное портфолио - вход";
+
+            Controls.Add(UiTheme.CreateTitle("Электронное портфолио", 32, 24, 360));
+
+            label1.Text = "Логин";
+            label1.BackColor = UiTheme.Page;
+            label1.ForeColor = UiTheme.MutedText;
+            label1.Font = UiTheme.SmallFont;
+            label1.Location = new System.Drawing.Point(32, 86);
+
+            LoginBox.Location = new System.Drawing.Point(32, 110);
+            LoginBox.Size = new System.Drawing.Size(356, 28);
+            UiTheme.StyleTextBox(LoginBox);
+
+            label2.Text = "Пароль";
+            label2.BackColor = UiTheme.Page;
+            label2.ForeColor = UiTheme.MutedText;
+            label2.Font = UiTheme.SmallFont;
+            label2.Location = new System.Drawing.Point(32, 150);
+
+            PasswordBox.Location = new System.Drawing.Point(32, 174);
+            PasswordBox.Size = new System.Drawing.Size(356, 28);
+            PasswordBox.UseSystemPasswordChar = true;
+            UiTheme.StyleTextBox(PasswordBox);
+
+            InVhod.Text = "Войти в портфолио";
+            InVhod.Location = new System.Drawing.Point(32, 226);
+            InVhod.Size = new System.Drawing.Size(356, 38);
+            UiTheme.StylePrimaryButton(InVhod);
         }
 
         private void InVhod_Click(object sender, EventArgs e)
@@ -25,13 +65,11 @@ namespace Portshool
                 {
                     con.Open();
 
-                    string stm = String.Format(
-                        "SELECT user_id, role FROM users WHERE login = '{0}' AND password_hash = '{1}'",
-                        LoginBox.Text,
-                        PasswordBox.Text
-                    );
+                    string stm = "SELECT user_id, role FROM users WHERE login = @login AND password_hash = @password";
 
                     MySqlCommand cmd = new MySqlCommand(stm, con);
+                    cmd.Parameters.AddWithValue("@login", LoginBox.Text);
+                    cmd.Parameters.AddWithValue("@password", PasswordBox.Text);
 
                     MySqlDataReader reader = cmd.ExecuteReader();
 

@@ -6,13 +6,17 @@ using System.Windows.Forms;
 
 namespace Portshool
 {
+    public enum PersonType { Student, Teacher }
+
     public static class PortfolioFileHelper
     {
         private static readonly string[] ImageExtensions = { ".jpg", ".jpeg", ".png", ".bmp" };
 
-        public static void LoadPersonPhoto(PictureBox pictureBox, string surname, string name, string patronymic)
+        // ── Публичный метод загрузки фото (с типом) ────────────────
+        public static void LoadPersonPhoto(PictureBox pictureBox, string surname, string name, string patronymic,
+            PersonType personType = PersonType.Student)
         {
-            string photoPath = FindPersonPhoto(surname, name, patronymic);
+            string photoPath = FindPersonPhoto(surname, name, patronymic, personType);
 
             if (pictureBox.Image != null)
             {
@@ -26,10 +30,36 @@ namespace Portshool
             }
         }
 
-        public static string FindPersonPhoto(string surname, string name, string patronymic)
+        // ── Загрузить фото из диалога и сохранить в нужную папку ──
+        public static void UploadPersonPhoto(string sourcePath, string surname, string name, string patronymic,
+            PersonType personType)
         {
+            string dir = GetPersonPhotoDirectory(personType);
+
+            string ext      = Path.GetExtension(sourcePath).ToLowerInvariant();
+            string fileName = BuildPersonFileName(surname, name, patronymic) + ext;
+            string destPath = Path.Combine(dir, fileName);
+
+            File.Copy(sourcePath, destPath, overwrite: true);
+        }
+
+        // ── Папки: Photos/Students и Photos/Teachers ────────────────
+        public static string GetPersonPhotoDirectory(PersonType personType)
+        {
+            string sub = personType == PersonType.Teacher ? "Teachers" : "Students";
+            string dir = Path.Combine(FindPortfolioRoot(), "PortfolioFiles", "Photos", sub);
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            return dir;
+        }
+
+        public static string FindPersonPhoto(string surname, string name, string patronymic,
+            PersonType personType = PersonType.Student)
+        {
+            // Порядок поиска: сначала типовая папка, потом общая Photos (обратная совместимость)
             string[] searchDirectories =
             {
+                GetPersonPhotoDirectory(personType),
                 GetPortfolioDirectory("Photos"),
                 GetPortfolioDirectory("Documents")
             };

@@ -78,7 +78,7 @@ namespace Portshool
                     Adress_l.Text = "Адрес: " + reader["address"];
                     Class_L.Text = "Класс: " + reader["class_name"];
 
-                    PortfolioFileHelper.LoadPersonPhoto(pictureBox1, surname, name, patronymic);
+                    PortfolioFileHelper.LoadPersonPhoto(pictureBox1, surname, name, patronymic, PersonType.Student);
                 }
             }
         }
@@ -212,10 +212,21 @@ namespace Portshool
         SELECT
             a.title AS 'Название',
             a.achievement_type AS 'Тип',
-            a.achievement_date AS 'Дата'
+            a.achievement_date AS 'Дата',
+            a.description AS 'Описание',
+            COALESCE(pf.file_name, '—') AS 'Фото',
+            COALESCE(pf.file_path, '') AS 'ФотоПуть'
         FROM achievements a
         INNER JOIN students s
             ON a.student_id = s.student_id
+        LEFT JOIN portfolio_files pf
+            ON pf.file_id = (
+                SELECT pf2.file_id FROM portfolio_files pf2
+                WHERE pf2.student_id = s.student_id
+                  AND pf2.file_name LIKE CONCAT('%_ach', a.achievement_id, '_%')
+                ORDER BY pf2.file_id DESC
+                LIMIT 1
+            )
         WHERE s.user_id = @userId";
 
                 MySqlDataAdapter da =
@@ -227,6 +238,9 @@ namespace Portshool
                 da.Fill(dt);
 
                 AchivmentData.DataSource = dt;
+
+                if (AchivmentData.Columns.Contains("ФотоПуть"))
+                    AchivmentData.Columns["ФотоПуть"].Visible = false;
             }
         }
 
@@ -252,7 +266,7 @@ namespace Portshool
 
             using (SaveFileDialog dialog = new SaveFileDialog())
             {
-                dialog.Filter = "Документ Word (*.docx)|*.docx";
+                dialog.Filter = "Таблица Excel (*.xlsx)|*.xlsx";
                 dialog.Title = "Сохранить отчёт портфолио";
                 dialog.FileName = BuildFileName(studentName);
 
@@ -267,7 +281,7 @@ namespace Portshool
                         ? "Портфолио ученика"
                         : "Портфолио ученика — " + studentName;
 
-                    WordReportHelper.SaveStudentReport(dialog.FileName, title, infoLines, grades, achievements);
+                    ExcelReportHelper.SaveStudentReport(dialog.FileName, title, infoLines, grades, achievements);
 
                     DialogResult open = MessageBox.Show(
                         "Отчёт сохранён:\n" + dialog.FileName + "\n\nОткрыть файл сейчас?",
@@ -302,7 +316,7 @@ namespace Portshool
                 baseName = baseName.Replace(invalid, '_');
             }
 
-            return baseName.Replace(' ', '_') + ".docx";
+            return baseName.Replace(' ', '_') + ".xlsx";
         }
 
         private void PrepareInterface()
@@ -325,7 +339,7 @@ namespace Portshool
             UiTheme.StyleSecondaryButton(Exit);
 
             printButton = new Button();
-            printButton.Text = "Печать отчёта (Word)";
+            printButton.Text = "Печать отчёта (Excel)";
             printButton.Location = new System.Drawing.Point(ClientSize.Width - 352, 24);
             printButton.Size = new System.Drawing.Size(208, 34);
             printButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -365,6 +379,66 @@ namespace Portshool
             AchivmentData.Size = new System.Drawing.Size(336, 420);
             AchivmentData.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             UiTheme.StyleGrid(AchivmentData);
+            AchivmentData.CellDoubleClick += new DataGridViewCellEventHandler(AchievementGrid_CellDoubleClick);
+        }
+
+        private void AchievementGrid_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0)
+                return;
+
+            DataRowView drv = AchivmentData.Rows[e.RowIndex].DataBoundItem as DataRowView;
+            if (drv == null)
+                return;
+
+            DataRow dr = drv.Row;
+            string filePath = dr.Table.Columns.Contains("ФотоПуть") ? dr["ФотоПуть"]?.ToString() : null;
+            string title    = dr.Table.Columns.Contains("Название")  ? dr["Название"]?.ToString() ?? "" : "";
+
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                MessageBox.Show(
+                    "К этому достижению фото не прикреплено.",
+                    "Фото отсутствует",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            ShowPhotoPreview(title, filePath);
+        }
+
+        private void ShowPhotoPreview(string title, string filePath)
+        {
+            System.Drawing.Image img;
+            try
+            {
+                byte[] bytes = File.ReadAllBytes(filePath);
+                using (MemoryStream ms = new MemoryStream(bytes))
+                    img = System.Drawing.Image.FromStream(ms);
+            }
+            catch
+            {
+                MessageBox.Show("Не удалось загрузить фото.", "Ошибка");
+                return;
+            }
+
+            Form preview = new Form();
+            preview.Text = string.IsNullOrWhiteSpace(title) ? "Фото достижения" : "Фото: " + title;
+            preview.StartPosition = FormStartPosition.CenterParent;
+            preview.Size = new System.Drawing.Size(720, 560);
+            preview.MinimumSize = new System.Drawing.Size(400, 320);
+            UiTheme.ApplyForm(preview);
+
+            PictureBox pb = new PictureBox();
+            pb.Dock = DockStyle.Fill;
+            pb.SizeMode = PictureBoxSizeMode.Zoom;
+            pb.BackColor = UiTheme.Page;
+            pb.Image = img;
+            preview.Controls.Add(pb);
+
+            preview.FormClosed += (s, e2) => { img.Dispose(); };
+            preview.ShowDialog(this);
         }
 
         private void label1_Click(object sender, EventArgs e)
